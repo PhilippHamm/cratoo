@@ -1,0 +1,2 @@
+class PublishingCountry < ApplicationRecord
+end
