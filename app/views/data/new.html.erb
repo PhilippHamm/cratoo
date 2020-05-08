@@ -1,0 +1,13 @@
+<div class="form-main">
+  <div class="form-container">
+    <h3>Let's get started: </h3>
+    <%= simple_form_for @scrape_data do |f| %>
+    <%= f.input :genre %>
+    <%= f.input :quantity %>
+    <%= f.button :submit, class:"btn btn-green" %>
+    <% end %>
+    <br>
+      <%= link_to :back do %>
+      <% end %>
+  </div>
+</div>
