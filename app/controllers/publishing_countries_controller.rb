@@ -1,0 +1,2 @@
+class PublishingCountriesController < ApplicationController
+end
