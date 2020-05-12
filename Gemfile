@@ -2,6 +2,8 @@ source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 ruby '2.6.5'
+# string comparison gem
+gem 'fuzzy-string-match'
 # Imitating User behaviour
 gem 'capybara'
 # Adds support for Capybara system testing and selenium driver

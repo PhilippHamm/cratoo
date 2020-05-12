@@ -4,19 +4,26 @@ require 'open-uri'
 require 'capybara/dsl'
 include Capybara::DSL
 require 'csv'
+require 'fuzzystringmatch'
+require "pry-byebug"
 
 class DataController < ApplicationController
+  def index
+    @scraped_data = Datum.all
+  end
+
+
+
+
   def new
     @scrape_data = Datum.new
   end
 
   def create
     @scrape_data = Datum.new(datum_params)
-    if @scrape_data.save
-      scrape(@scrape_data.genre, @scrape_data.quantity)
-    else
-      new_datum_path
-    end
+    scrape(@scrape_data.genre, @scrape_data.quantity)
+    flash.alert = 'Scrape job succesfully executed'
+    @scrape_data.save
   end
 
   private
@@ -27,30 +34,24 @@ class DataController < ApplicationController
 
   def scrape(genre, quantity)
     csv_options = { col_sep: ',' }
-    filepath    = Rails.root.join('lib', 'data', 'ghetto_house.csv')
+    filepath    = Rails.root.join('lib', 'data', "#{genre}_#{Time.now.strftime('%Y-%m-%d-%H-%M')}_#{quantity}.csv")
+    @scrape_data.filepath = "#{genre}_#{Time.now.strftime('%Y-%m-%d-%H-%M')}_#{quantity}.csv"
     CSV.open(filepath, 'wb', csv_options) do |csv|
       csv << [
-        'artist',
+        'artist_0',
+        'artist_1',
+        'genre_0',
+        'genre_1',
+        'style_0',
+        'style_1',
+        'style_2',
+        'style_3',
         'title',
         'duration',
-        'genre',
-        'style',
         'publishing_year',
         'publishing_country',
         'score',
-        'audio_source_1',
-        'audio_source_2',
-        'audio_source_3',
-        'audio_source_4',
-        'audio_source_5',
-        'audio_source_6',
-        'audio_source_7',
-        'audio_source_8',
-        'audio_source_9',
-        'audio_source_10',
-        'audio_source_11',
-        'audio_source_12',
-        'audio_source_13'
+        'audio_source'
       ]
     end
     #Setting capybara driver
@@ -59,263 +60,126 @@ class DataController < ApplicationController
     Capybara.app_host = 'https://discogs.com'
     Capybara.default_max_wait_time = 3
     Capybara.raise_server_errors = false
-
-
-    # visit('https://www.mobile.de')
-    # fill_in('ambit-search-location', with: city)
-    # sleep(2)
-    # find('#ambit-search-location').native.send_keys(:return)
-    # sleep(1)
-    # click_button("qssub")
-    # sleep(2)
-
     # Ghetto House
-    visit('https://www.discogs.com/de/search/?sort=want%2Cdesc&style_exact=Ghetto+House&ev=gs_mc')
+    visit('https://www.discogs.com/de/search/?sort=want%2Cdesc&style_exact=Ghetto+House&ev=gs_mc&type=release')
     sleep(2)
     songs = []
-    j = 2
-    until j == 40
-      # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    pages = 1
+    jarow = FuzzyStringMatch::JaroWinkler.create(:native)
+    until pages == quantity
+      index_page = current_url
+      puts index_page
       songs = []
       q = []
       q = all("#search_results > .card.card_large.float_fix.shortcut_navigable > h4 > a").map { |a| a['href'] }
-      # if q.length < 1
-      #   sleep (3)
-      #   q = all('.page-centered .viewport .g-row .g-col-9 .cBox--resultList .cBox-body--resultitem .result-item').map { |a| a['href'] }
-      # end
       puts "#{q.length}"
-      # Inseratdatum
-      i = -1
       q.each do |release|
-        begin
-          i += 1
-          visit(release)
-          song = Hash.new
-          if has_css?('#tracklist > div > table > tbody > tr.first.tracklist_track.track > td.tracklist_track_pos')
-            song[:artist] = find('#profile_title > span:nth-child(1) > span > a').text
-            song[:genre] = find('#page_content > div.body > div.profile > div:nth-child(11) > a')
-        'style',
-        'publishing_year',
-        'publishing_country',
-        'score',
-            song[:title] = find('#rbt-ad-title').text
+        song = Hash.new
+        visit(release)
+        if has_css?('#tracklist > div > table > tbody > tr:nth-child(2) > td.tracklist_track_pos', visible: false)
+          artists = all('#profile_title > span:nth-child(1) > span > a').map { |a| a.text }
+          artist_i = 0
+          until artist_i == artists.length || artist_i == 2
+            song["artist_#{artist_i}"] = artists[artist_i]
+            artist_i += 1
           end
-          song[:ad_link] = ad
-          if has_css?('#rbt-envkv\.consumption-v > div.u-margin-bottom-9')
-            consumptions = all('#rbt-envkv\.consumption-v > div.u-margin-bottom-9').map { |c| c.text }
-            song[:consumption] = consumptions.join("\n")
+          genres = all('#page_content > div.body > div.profile > div:nth-child(11) > a').map{ |a| a.text}
+          genre_i = 0
+          until genre_i == genres.length || genre_i == 2
+            song["genre_#{genre_i}"] = genres[genre_i]
+            genre_i += 1
           end
-          s = all('#z1234 > div.viewport > div > div:nth-child(2) > div:nth-child(5) > div.g-col-8 > div.cBox.cBox--content.cBox--vehicle-details.u-overflow-inherit > div:nth-child(2) > div > div.g-col-2 > div > div > div > div > div > div > div > div.songousel-img-wrapper.u-flex-centerer.u-border.u-text-pointer.slick-slide', visible: false).length
-          # !!!! sometimes doesn't find following selector if no pictrues
-          find('#z1234 > div.viewport > div > div:nth-child(2) > div:nth-child(5) > div.g-col-8 > div.cBox.cBox--content.cBox--vehicle-details.u-overflow-inherit > div:nth-child(2) > div > div.g-col-2 > div > div > div > div > div > div > div > div:nth-child(2)').click
-          e = 0
-          # sleep(1)
-          if s > 2
-            until e >= (s - 2) || e > 11
-              all_song_nodes = all("#rbt-gallery-img-#{e} > img", visible: false)
-              song["image_#{e}"] = all_song_nodes.last['data-lazy'].insert(0, 'https:')
-              e += 1
+          styles = all('#page_content > div.body > div.profile > div:nth-child(13) > a').map { |a| a.text }
+          style_i = 0
+          until style_i == styles.length || style_i == 4
+            song["style_#{style_i}"] = styles[style_i]
+            style_i += 1
+          end
+          begin
+            song[:publishing_year] = find('#page_content > div.body > div.profile > div:nth-child(9) > a').text
+            song[:publishing_country] = find('#page_content > div.body > div.profile > div:nth-child(7) > a').text
+            song[:score] = find('#statistics > div > ul:nth-child(1) > li:nth-child(3) > span').text
+            song[:quantity_score] = find('#statistics > div > ul:nth-child(1) > li:nth-child(4) > a > span').text
+            song[:quantity_search] = find('#statistics > div.section_content.toggle_section_content > ul > li:nth-child(2) > a').text
+          rescue Capybara::ElementNotFound
+            next
+          end
+          # Get all song titles from list
+          song_titles = all('#tracklist > div > table > tbody > tr.tracklist_track.track > td.track.tracklist_track_title > span').map { |span| span.text}
+          title_first_word = song_titles.map{|title| title.split(" ").first}
+          # Get all youtube video links from player
+          if has_css?('#youtube_player_placeholder')
+            sources = find('#youtube_player_placeholder')["data-video-ids"].split(",")
+            # Get all youtube video title from player
+            youtube_titles = all('#youtube_tracklist > .youtube_track.youtube_track_paused > strong').map { |track| track.text }
+            # Set index for iteration
+            tracklist_i = 0
+
+            # Iterate over song_titles,
+            until tracklist_i == song_titles.length
+              # Compare to all youtube video title
+              youtube_tracklist_i = 0
+              youtube_titles.each do |youtube_title|
+                if youtube_title.downcase.match?(title_first_word[tracklist_i].gsub("(","").downcase[0..4])
+                  youtube_title_words = youtube_title.downcase.split(" ")
+                  title_words = song_titles[tracklist_i].downcase.split(" ")
+                  match_youtube_title = youtube_title_words.select { |word| title_words.include?(word) }.join(" ")
+                  if jarow.getDistance(song_titles[tracklist_i].downcase, match_youtube_title) > 0.9
+                    song[:title] = song_titles[tracklist_i]
+                    # assign song source if string is similar to one out of youtube video title
+                    song[:audio_source] = "https://www.youtube.com/watch?v=#{sources[youtube_tracklist_i]}"
+                    songs.push(song)
+                    puts "#{song["artist_0"]} - #{song[:title]} - #{song[:audio_source]}, total quantity #{songs.length}"
+                    if tracklist_i < song_titles.length
+                      song = Hash.new
+                      song['artist_0'] = songs.last['artist_0']
+                      song['artist_1'] = songs.last['artist_1'] if songs.last['artist_1']
+                      song['genre_0'] = songs.last['genre_0']
+                      song['genre_1'] = songs.last['genre_1'] if songs.last['genre_1']
+                      song['style_0'] = songs.last['style_0']
+                      song['style_1'] = songs.last['style_1'] if songs.last['style_1']
+                      song['style_2'] = songs.last['style_2'] if songs.last['style_2']
+                      song['style_3'] = songs.last['style_3'] if songs.last['style_3']
+                      song[:publishing_year] = songs.last[:publishing_year]
+                      song[:publishing_country] = songs.last[:publishing_country]
+                      song[:score] = songs.last[:score]
+                      break
+                    end
+                  end
+                end
+                youtube_tracklist_i += 1
+              end
+              tracklist_i += 1
             end
           end
-          find('#standard-overlay-image-gallery-container > div:nth-child(2) > div > div > span').click
-          song[:title] = find('#rbt-ad-title').text
-          song[:price] = find('#rbt-pt-v').text.match(/\d+.\d+\s./)
-          # Define variable to save time
-          if has_css?('#rbt-damageCondition-v')
-            song[:damage_condition] = find('#rbt-damageCondition-v').text
-          end
-          if has_css?('#rbt-countryVersion-v')
-            song[:country_version] = find('#rbt-countryVersion-v').text
-          end
-          if has_css?('#rbt-category-v')
-            song[:category] = find('#rbt-category-v').text
-          end
-          song[:mileage] = find('#rbt-mileage-v').text
-          if has_css?('#rbt-cubicCapacity-v')
-            song[:cubic_capacity] = find('#rbt-cubicCapacity-v').text
-          end
-          song[:power] = find('#rbt-power-v').text
-          song[:fuel] = find('#rbt-fuel-v').text
-          if has_css?('#rbt-envkv\.emission-v')
-            song[:emission] = find('#rbt-envkv\.emission-v').text
-          end
-          if has_css?('#rbt-numberOfPreviousOwners-v')
-            song[:num_owners] = find('#rbt-numberOfPreviousOwners-v').text
-          end
-          if has_css?('#rbt-numSeats-v')
-            song[:num_seats] = find('#rbt-numSeats-v').text
-          end
-          if has_css?('#rbt-doorCount-v')
-            song[:door_count] = find('#rbt-doorCount-v').text
-          end
-          if has_css?('#rbt-transmission-v')
-            song[:transmission] = find('#rbt-transmission-v').text
-          end
-          if has_css?('#rbt-emissionClass-v')
-            song[:emission_class] = find('#rbt-emissionClass-v').text
-          end
-          if has_css?('#rbt-emissionsSticker-v')
-            song[:emssion_sticker] = find('#rbt-emissionsSticker-v').text
-          end
-          if has_css?('#rbt-firstRegistration-v')
-            song[:first_registration] = find('#rbt-firstRegistration-v').text
-          end
-          if has_css?('#rbt-hu-v')
-            song[:hu] = find('#rbt-hu-v').text
-          end
-          if has_css?('#rbt-climatisation-v')
-            song[:climatisation] = find('#rbt-climatisation-v').text
-          end
-          if has_css?('#rbt-constructionYear-v')
-            song[:construction_year] = find('#rbt-constructionYear-v').text
-          end
-          if has_css?('#rbt-parkAssists-v')
-            song[:park_assist] = find('#rbt-parkAssists-v').text
-          end
-          if has_css?('#rbt-airbag-v')
-            song[:airbag] = find('#rbt-airbag-v').text
-          end
-          if has_css?('#rbt-manufacturerColorName-v')
-            song[:manufacturer_color_name] = find('#rbt-manufacturerColorName-v').text
-          end
-          if has_css?('#rbt-color-v')
-            song[:color] = find('#rbt-color-v').text
-          end
-
-          if has_css?('#rbt-interior-v')
-            song[:interior] = find('#rbt-interior-v').text
-          end
-          song[:dealer_name] = find('#dealer-details-link-top > h4').text
-          song[:dealer_postal_code] = find('#rbt-seller-address').text.match(/\d{5}/)
-          song[:dealer_city] = find('#rbt-seller-address').text.match(/[a-zA-Z]+(-)?\D+$/)
-          song[:dealer_address] = find('#rbt-seller-address').text.match(/^\D*\d*\w(-|,)?\w*/)
-          song[:dealer_phone] = find('#rbt-seller-phone').text.sub('Tel.: ','')
-          if has_css?('#rbt-top-dealer-info > div > div > span > a > span.star-rating-s.u-valign-middle.u-margin-right-9')
-            song[:dealer_rating] = find('#rbt-top-dealer-info > div > div > span > a > span.star-rating-s.u-valign-middle.u-margin-right-9')['data-rating']
-            song[:dealer_quantity_ratings] = find('#rbt-top-dealer-info > div > div > span > a > span.amount-of-ratings').text
-          end
-          features = all('#rbt-features > div > div.g-col-6 > div.bullet-list > p').map { |p| p.text }
-          song[:features] = features.join("\n")
-          song[:publishing_date] = publishing_dates[i].match(/\d{2}.\d{2}.\d{4}/)
-          songs.push(song)
-        rescue Capybara::ElementNotFound
-          sleep(2)
-          next
-        rescue Selenium::WebDriver::Error::ElementClickInterceptedError
-          sleep(2)
-          next
-        rescue => e
-          sleep(2)
-          next
         end
-        puts "#{song[:title]}, total quantity #{songs.length}"
       end
       CSV.open(filepath, 'a', csv_options) do |csv|
         songs.each do |song|
           csv << [
-            song[:ad_link],
+            song['artist_0'],
+            song['artist_1'],
+            song['genre_0'],
+            song['genre_1'],
+            song['style_0'],
+            song['style_1'],
+            song['style_2'],
+            song['style_3'],
             song[:title],
-            song[:price],
-            song[:damage_condition],
-            song[:category],
-            song[:country_version],
-            song[:consumption],
-            song[:mileage],
-            song[:cubic_capacity],
-            song[:power],
-            song[:fuel],
-            song[:emission],
-            song[:num_owners],
-            song[:num_seats],
-            song[:door_count],
-            song[:transmission],
-            song[:emission_class],
-            song[:emssion_sticker],
-            song[:first_registration],
-            song[:hu],
-            song[:climatisation],
-            song[:construction_year],
-            song[:park_assist],
-            song[:airbag],
-            song[:manufacturer_color_name],
-            song[:color],
-            song[:interior],
-            song["image_1"],
-            song["image_2"],
-            song["image_3"],
-            song["image_4"],
-            song["image_5"],
-            song["image_6"],
-            song["image_7"],
-            song["image_8"],
-            song["image_8"],
-            song["image_10"],
-            song["image_11"],
-            song["image_12"],
-            song[:features],
-            song[:dealer_name],
-            song[:dealer_postal_code],
-            song[:dealer_city],
-            song[:dealer_address],
-            song[:dealer_phone],
-            song[:dealer_rating],
-            song[:dealer_quantity_ratings],
-            song[:publishing_date]
+            song[:duration],
+            song[:publishing_year],
+            song[:publishing_country],
+            song[:score],
+            song[:audio_source]
           ]
         end
       end
-      begin
-        find('#srp-back-link', visible: false).hover
-        find('#srp-back-link').click
-      rescue Capybara::ElementNotFound
-        puts "ElementNotFound"
-        execute_script "window.scrollBy(0,5000)"
-        sleep(2)
-        execute_script "window.scrollBy(0,-5000)"
-        sleep(3)
-        find('#srp-back-link', visible: false).hover
-        find('#srp-back-link', visible: false).click if has_css?('#srp-back-link')
-        puts "rescued"
-      rescue Selenium::WebDriver::Error::ElementClickInterceptedError
-        puts "ElementClickInterceptedError 1"
-        execute_script "window.scrollBy(0,5000)"
-        sleep(2)
-        execute_script "window.scrollBy(0,-5000)"
-        sleep(3)
-        find('#srp-back-link', visible: false).hover
-        find('#srp-back-link', visible: false).click if has_css?('#srp-back-link')
-        puts "rescued"
-      end
+      visit(index_page)
+      pages += 1
+      puts "continue with page #{pages}"
       sleep(2)
-      execute_script "window.scrollBy(0,5000)"
-      sleep(1)
-      execute_script "window.scrollBy(0,5000)"
-      find("#rbt-p-#{j}", visible: false).hover
-      find("#rbt-p-#{j}", visible: false).click
-      sleep(1)
-      begin
-        while find('#z1234 > div.viewport > div > div:nth-child(3) > div:nth-child(4) > div.g-col-9 > div:nth-child(3) > div.cBox-body.u-text-center.u-margin-top-18 > ul.pagination > li > span.btn.btn--muted.btn--s.disabled').text.to_i < j
-          puts "next site not ready... scroll action 2 sec wait"
-          sleep(2)
-          execute_script "window.scrollBy(0,-5000)"
-          sleep(2)
-          execute_script "window.scrollBy(0,4500)"
-          find("#rbt-p-#{j}", visible: false).hover
-          find("#rbt-p-#{j}", visible: false).click
-        end
-      rescue Selenium::WebDriver::Error::ElementClickInterceptedError
-        puts "ElementClickInterceptedError 2"
-        execute_script "window.scrollBy(0,5000)"
-        sleep(2)
-        execute_script "window.scrollBy(0,-5000)"
-        sleep(2)
-        find("#rbt-p-#{j}", visible: false).hover
-        find("#rbt-p-#{j}", visible: false).click
-        puts "rescued"
-      end
-      puts "continue with page #{j}"
-      j += 1
+      find('#pjax_container > div.pagination.bottom > form > div.responsive_wrap > ul > li:nth-child(2) > a').click
+      sleep(2)
     end
-    songs
   end
 end

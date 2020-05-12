@@ -1,0 +1,13 @@
+<h2>Scraping history</h2>
+<div>
+  <% @scraped_data.each do |datum| %>
+    <p>
+      <%= datum.id %> | <%= datum.genre %> | <%= datum.filepath %>
+    </p>
+    <div>
+      <% if datum.imported == false %>
+        <%= link_to "Daten importieren", artists_path, method: "post", class: "btn btn-alert" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

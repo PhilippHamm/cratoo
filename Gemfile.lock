@@ -1,6 +1,9 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    RubyInline (3.12.5)
+      ZenTest (~> 4.3)
+    ZenTest (4.12.0)
     actioncable (5.2.4.2)
       actionpack (= 5.2.4.2)
       nio4r (~> 2.0)
@@ -92,6 +95,8 @@ GEM
     ffi (1.12.2)
     font-awesome-sass (5.12.0)
       sassc (>= 1.11)
+    fuzzy-string-match (1.0.1)
+      RubyInline (>= 3.8.6)
     globalid (0.4.2)
       activesupport (>= 4.2.0)
     i18n (1.8.2)
@@ -241,6 +246,7 @@ DEPENDENCIES
   devise
   dotenv-rails
   font-awesome-sass
+  fuzzy-string-match
   jbuilder (~> 2.5)
   listen (>= 3.0.5, < 3.2)
   nokogiri
