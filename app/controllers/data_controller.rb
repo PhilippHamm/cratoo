@@ -12,9 +12,6 @@ class DataController < ApplicationController
     @scraped_data = Datum.all
   end
 
-
-
-
   def new
     @scrape_data = Datum.new
   end
@@ -26,6 +23,59 @@ class DataController < ApplicationController
     @scrape_data.save
   end
 
+  def save
+    datum = Datum.find(params[:id])
+    csv_options = { col_sep: ',', headers: :first_row }
+    filepath    = Rails.root.join('lib', 'data', datum.filepath)
+    CSV.foreach(filepath, csv_options) do |row|
+      # artist
+      if row['artist_1'].nil?
+        artist_name = row['artist_0']
+      else
+        artist_name = "#{row['artist_0']}, #{row['artist_1']}"
+      end
+      unless Artist.find_by(name: artist_name)
+        artist = Artist.new(name: artist_name)
+        artist.save
+      end
+      # genre
+      # Only first genre is saved Database design has to be different
+      # Many to many relationship for each song and style and genre
+      genre_name = row['genre_0']
+      unless Genre.find_by(name: genre_name)
+        genre = Genre.new(name: genre_name)
+        genre.save
+      end
+      # style
+      # Only first style is saved
+      style_name = row['style_0']
+      unless Style.find_by(name: style_name)
+        style = Style.new(name: style_name)
+        style.save
+      end
+      # publishing country
+      publishing_country_name = row['publishing_country']
+      unless PublishingCountry.find_by(name: publishing_country_name)
+        publishing_country = PublishingCountry.new(name: publishing_country_name)
+        publishing_country.save
+      end
+      # song
+      # duration is missing
+      unless Song.find_by(title: row['title'])
+        song = Song.new(artist_id: Artist.find_by(name: artist_name).id,
+                        publishing_country_id: PublishingCountry.find_by(name: publishing_country_name).id,
+                        genre_id: Genre.find_by(name: genre_name).id,
+                        title: row['title'],
+                        duration: row['duration'],
+                        publishing_year: Date.strptime(row['publishing_year'], '%d %b %Y'),
+                        score: row['score'],
+                        audio_source: row['audio_source'],
+                        )
+        song.save
+      end
+      raise
+    end
+  end
   private
 
   def datum_params
