@@ -30,6 +30,15 @@ ActiveRecord::Schema.define(version: 2020_05_12_214538) do
     t.string "filepath"
   end
 
+  create_table "favorites", force: :cascade do |t|
+    t.bigint "user_id"
+    t.bigint "song_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["song_id"], name: "index_favorites_on_song_id"
+    t.index ["user_id"], name: "index_favorites_on_user_id"
+  end
+
   create_table "genres", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", null: false
@@ -106,6 +115,8 @@ ActiveRecord::Schema.define(version: 2020_05_12_214538) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "favorites", "songs"
+  add_foreign_key "favorites", "users"
   add_foreign_key "playlist_songs", "playlists"
   add_foreign_key "playlist_songs", "songs"
   add_foreign_key "playlists", "users"

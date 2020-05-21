@@ -9,7 +9,7 @@ gem 'capybara'
 # Adds support for Capybara system testing and selenium driver
 gem 'selenium-webdriver', '~> 3.142', '>= 3.142.7'
 # Easy installation and use of chromedriver to run system tests with Chrome
-gem 'chromedriver-helper'
+gem 'webdrivers', '~> 4.0'
 # Parsing data from website
 gem 'nokogiri'
 # Webpacker

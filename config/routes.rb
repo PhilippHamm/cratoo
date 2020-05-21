@@ -1,8 +1,9 @@
 Rails.application.routes.draw do
   devise_for :users, :controllers => { registrations: 'registrations' }
   root to: 'pages#home'
+  get 'suggested_songs', to: 'pages#suggested_songs', as: :suggested_songs
   resources :users, only: [:show, :edit, :update, :delete]
-  resources :songs, only: [:create, :delete]
+  resources :songs, only: [:create, :delete, :index]
   resources :styles, only: [:create, :delete]
   resources :genres, only: [:create, :delete]
   resources :publishing_countries, only: [:create, :delete]
