@@ -50,7 +50,7 @@ class DataController < ApplicationController
       # Only first style is saved
       style_name = row['style_0']
       unless Style.find_by(name: style_name)
-        style = Style.new(name: style_name)
+        style = Style.new(name: style_name, genre_id: Genre.find_by(name: genre_name).id)
         style.save
       end
       # publishing country
@@ -59,6 +59,16 @@ class DataController < ApplicationController
         publishing_country = PublishingCountry.new(name: publishing_country_name)
         publishing_country.save
       end
+      # publishing_year
+      if row['publishing_year'].split.size == 3
+        publishing_year = Date.strptime(row['publishing_year'], '%d %b %Y')
+      elsif row['publishing_year'].split.size == 2
+        publishing_year = Date.strptime(row['publishing_year'], '%b %Y')
+      else
+        publishing_year = Date.strptime(row['publishing_year'], '%Y')
+      end
+
+
       # song
       # duration is missing
       unless Song.find_by(title: row['title'])
@@ -67,13 +77,13 @@ class DataController < ApplicationController
                         genre_id: Genre.find_by(name: genre_name).id,
                         title: row['title'],
                         duration: row['duration'],
-                        publishing_year: Date.strptime(row['publishing_year'], '%d %b %Y'),
+                        publishing_year: publishing_year,
                         score: row['score'],
                         audio_source: row['audio_source'],
+                        style_id: Style.find_by(name: style_name).id
                         )
         song.save
       end
-      raise
     end
   end
   private
