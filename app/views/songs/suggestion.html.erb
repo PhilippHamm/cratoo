@@ -1,0 +1,3 @@
+<%= link_to "Nah, not ghettooo enough", playlist_songs_path(song_id: @suggestion.id, status: "dislike"), method: "post" %>
+<%= '<iframe id="youtube" width="200" height="200" src=''"'"#{@suggestion.audio_source}"'"'' frameborder="0" allow="autoplay"></iframe>'.html_safe%>
+<%= link_to "Sounds good, bra, shake dat booty", playlist_songs_path(song_id: @suggestion.id, status: "like"), method: "post" %>

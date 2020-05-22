@@ -2,7 +2,11 @@ Rails.application.routes.draw do
   devise_for :users, :controllers => { registrations: 'registrations' }
   root to: 'pages#home'
   resources :users, only: [:show, :edit, :update, :delete]
-  resources :songs, only: [:create, :delete]
+  resources :songs, only: [:index, :create, :delete] do
+    collection do
+      get :suggestion
+    end
+  end
   resources :styles, only: [:create, :delete]
   resources :genres, only: [:create, :delete]
   resources :publishing_countries, only: [:create, :delete]

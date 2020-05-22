@@ -79,7 +79,7 @@ class DataController < ApplicationController
                         duration: row['duration'],
                         publishing_year: publishing_year,
                         score: row['score'],
-                        audio_source: row['audio_source'],
+                        audio_source: "http://www.youtube.com/embed/#{row['audio_source'].match(/[^=]*$/)}?autoplay=1",
                         style_id: Style.find_by(name: style_name).id
                         )
         song.save
