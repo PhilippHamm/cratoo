@@ -6,7 +6,7 @@
     </p>
     <div>
       <% if datum.imported == false %>
-        <%= link_to "Daten importieren", artists_path, method: "post", class: "btn btn-alert" %>
+        <%= link_to "Daten speichern", save_path(datum.id), class: "btn btn-alert" %>
       <% end %>
     </div>
   <% end %>
