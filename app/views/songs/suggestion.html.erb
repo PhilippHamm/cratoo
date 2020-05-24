@@ -1,3 +1,12 @@
 <%= link_to "Nah, not ghettooo enough", playlist_songs_path(song_id: @suggestion.id, status: "dislike"), method: "post" %>
 <%= '<iframe id="youtube" width="200" height="200" src=''"'"#{@suggestion.audio_source}"'"'' frameborder="0" allow="autoplay"></iframe>'.html_safe%>
 <%= link_to "Sounds good, bra, shake dat booty", playlist_songs_path(song_id: @suggestion.id, status: "like"), method: "post" %>
+<br>
+<h1>
+  <%= link_to "Check out ya cratez?", playlist_path(Playlist.find_by(user_id: current_user, name:"Likes").id) %>
+</h1>
+<!-- parked gif -->
+<% if @check_playlist == true %>
+  <iframe src="https://giphy.com/embed/l4Ep69CRykvzCD1Ty" width="480" height="360" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>
+  <%= link_to "Check out ya diggs", playlist_path(Playlist.find_by(user_id: current_user, name:"Likes").id) %>
+<% end %>

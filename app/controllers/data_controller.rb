@@ -6,6 +6,7 @@ include Capybara::DSL
 require 'csv'
 require 'fuzzystringmatch'
 require "pry-byebug"
+require 'webdrivers'
 
 class DataController < ApplicationController
   def index
@@ -115,11 +116,36 @@ class DataController < ApplicationController
       ]
     end
     #Setting capybara driver
-    Capybara.default_driver = :selenium_chrome # :selenium_chrome and :selenium_chrome_headless are also registered
-    Capybara.run_server = false
+    # Capybara.default_driver = :selenium_chrome # :selenium_chrome and :selenium_chrome_headless are also registered
+    # Capybara.run_server = false
+
+    # Capybara.default_max_wait_time = 3
+    # Capybara.raise_server_errors = false
+
+    Capybara.register_driver :chrome do |app|
+      Capybara::Selenium::Driver.new(app, browser: :chrome)
+    end
+
+    Capybara.register_driver :headless_chrome do |app|
+      capabilities = Selenium::WebDriver::Remote::Capabilities.chrome(
+        chromeOptions: {
+          args: %w[headless enable-features=NetworkService,NetworkServiceInProcess]
+        }
+      )
+
+      Capybara::Selenium::Driver.new app,
+        browser: :chrome,
+        desired_capabilities: capabilities
+    end
+
+    Capybara.default_driver = :headless_chrome
+    Capybara.javascript_driver = :headless_chrome
     Capybara.app_host = 'https://discogs.com'
-    Capybara.default_max_wait_time = 3
-    Capybara.raise_server_errors = false
+
+
+
+
+
     # Ghetto House
     visit('https://www.discogs.com/de/search/?sort=want%2Cdesc&style_exact=Ghetto+House&ev=gs_mc&type=release')
     sleep(2)

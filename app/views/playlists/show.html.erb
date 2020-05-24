@@ -1,0 +1,6 @@
+<% @playlist_songs.each do |playlist_song| %>
+  <% song = Song.find(playlist_song.song_id) %>
+  <%= "#{Artist.find(song.artist_id).name} | #{song.title} | #{song.publishing_year}" %>
+  <br>
+<% end %>
+<%= link_to "Get back bangin' bra", suggestion_songs_path %>

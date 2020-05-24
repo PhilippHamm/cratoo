@@ -2,14 +2,13 @@ source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 ruby '2.6.5'
+gem 'capybara'
+gem 'selenium-webdriver'
+gem 'webdrivers', '~> 4.0'
 # string comparison gem
 gem 'fuzzy-string-match'
-# Imitating User behaviour
-gem 'capybara'
-# Adds support for Capybara system testing and selenium driver
-gem 'selenium-webdriver', '~> 3.142', '>= 3.142.7'
 # Easy installation and use of chromedriver to run system tests with Chrome
-gem 'chromedriver-helper'
+# gem 'chromedriver-helper', '~> 2.1', '>= 2.1.1'
 # Parsing data from website
 gem 'nokogiri'
 # Webpacker

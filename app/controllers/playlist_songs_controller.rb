@@ -14,6 +14,12 @@ class PlaylistSongsController < ApplicationController
       user_choice = PlaylistSong.new(playlist_id: dislikes.id, song_id: params[:song_id].to_i)
     end
     user_choice.save
-    redirect_to suggestion_songs_path
+
+    if PlaylistSong.where(playlist_id: likes.id).count % 1 == 0
+      playlist = true
+    else
+      playlist = false
+    end
+    redirect_to suggestion_songs_path(playlist: playlist)
   end
 end
