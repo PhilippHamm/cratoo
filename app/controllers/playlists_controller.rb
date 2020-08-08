@@ -1,6 +1,6 @@
 class PlaylistsController < ApplicationController
   def show
-    @playlist = Playlist.find_by(user_id: current_user.id, name:"Likes")
+    @playlist = Playlist.find(params[:id].to_i)
     @playlist_songs = PlaylistSong.where(playlist_id: @playlist.id)
   end
 end

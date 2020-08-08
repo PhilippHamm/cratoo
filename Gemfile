@@ -2,6 +2,11 @@ source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 ruby '2.6.5'
+
+
+# Spotify Wrapper
+gem 'rspotify'
+# Scraping
 gem 'capybara'
 gem 'selenium-webdriver'
 gem 'webdrivers', '~> 4.0'

@@ -1,12 +1,27 @@
-<%= link_to "Nah, not ghettooo enough", playlist_songs_path(song_id: @suggestion.id, status: "dislike"), method: "post" %>
-<%= '<iframe id="youtube" width="200" height="200" src=''"'"#{@suggestion.audio_source}"'"'' frameborder="0" allow="autoplay"></iframe>'.html_safe%>
-<%= link_to "Sounds good, bra, shake dat booty", playlist_songs_path(song_id: @suggestion.id, status: "like"), method: "post" %>
-<br>
-<h1>
-  <%= link_to "Check out ya cratez?", playlist_path(Playlist.find_by(user_id: current_user, name:"Likes").id) %>
-</h1>
-<!-- parked gif -->
-<% if @check_playlist == true %>
-  <iframe src="https://giphy.com/embed/l4Ep69CRykvzCD1Ty" width="480" height="360" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>
-  <%= link_to "Check out ya diggs", playlist_path(Playlist.find_by(user_id: current_user, name:"Likes").id) %>
+<!-- if no tracks are left to suggest inform user
+else show suggested track -->
+<% if @suggestion.nil? %>
+  <h1>You have listened to all tracks of this genre, please get PRO to listen more tracks. </h1>
+  <%= link_to "Your cratez", playlist_path(Playlist.find_by(user_id: current_user, name:"Likes").id) %>
+<% else %>
+  <%= link_to "Nah, not my grind", playlist_songs_path(song_id: @suggestion.id, status: "dislike"), method: "post" %>
+  <%= '<iframe id="youtube" width="200" height="200" src=''"'"#{@suggestion.audio_source}"'"'' frameborder="0" allow="autoplay"></iframe>'.html_safe%>
+  <%= link_to "Sounds good, bra, shake it", playlist_songs_path(song_id: @suggestion.id, status: "like"), method: "post" %>
+  <br>
+  <% unless Playlist.where(user_id: current_user.id).first.nil? %>
+    <h1>
+      <%= link_to "Check out ya cratez?", playlist_path(Playlist.find_by(user_id: current_user, name:"Likes").id) %>
+    </h1>
+
+    <h1>
+      <%= link_to "Spotify sucks, not matched tracks here", playlist_path(Playlist.find_by(user_id: current_user, name:"Likes without match").id) %>
+    </h1>
+  <% end %>
+
+  <!-- parked gif -->
+  <% if @check_playlist == true %>
+    <iframe src="https://giphy.com/embed/l4Ep69CRykvzCD1Ty" width="480" height="360" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>
+      <%= link_to "Check out ya diggs", playlist_path(Playlist.find_by(user_id: current_user, name:"Likes").id) %>
+  <% end %>
 <% end %>
+

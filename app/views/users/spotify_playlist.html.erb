@@ -1,0 +1,7 @@
+<%= @playlist.name  %>
+<% @spotify_tracks.each do |track|  %>
+  <%= "#{track.artist.name} | #{track.name}" %>
+  <br>
+<% end %>
+<p> Saved to your spotify Account </p>
+<%= link_to "Keep on diggin bra", suggestion_songs_path %>

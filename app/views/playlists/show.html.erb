@@ -1,6 +1,24 @@
 <% @playlist_songs.each do |playlist_song| %>
   <% song = Song.find(playlist_song.song_id) %>
   <%= "#{Artist.find(song.artist_id).name} | #{song.title} | #{song.publishing_year}" %>
-  <br>
+<!-- Add to Playlist feature -->
+<!--   <%#= link_to "Add to playlist", playlist_songs_path(song_id: song.id) %>
+ -->
+ <br>
 <% end %>
+
+
+<!-- Show Spotify playlist creation link only if length of playlist songs > 0 -->
+<% if @playlist_songs.length > 0 %>
+
+  <!-- Show unmatched track link only if playlist is not without matches  -->
+  <% unless Playlist.find(@playlist_songs.first.playlist_id).name == "Likes without match" %>
+    <%= link_to "Spotify sucks, not matched tracks here", playlist_path(Playlist.find_by(user_id: current_user, name:"Likes without match").id) %>
+
+  <% end %>
+  <%= link_to "Create Playlist in Spotify", '/auth/spotify' %>
+<% end %>
+
 <%= link_to "Get back bangin' bra", suggestion_songs_path %>
+
+

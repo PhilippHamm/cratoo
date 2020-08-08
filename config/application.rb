@@ -16,6 +16,7 @@ require "sprockets/railtie"
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
+RSpotify::authenticate("f89128215edc44adb16bfe8fb2aba93d", "05678f9267a04d7daaa62f208d2f062c")
 
 module Cratoo
   class Application < Rails::Application
@@ -36,3 +37,4 @@ module Cratoo
     config.generators.system_tests = nil
   end
 end
+

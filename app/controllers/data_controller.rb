@@ -39,6 +39,12 @@ class DataController < ApplicationController
         artist = Artist.new(name: artist_name)
         artist.save
       end
+      # album
+      album_title = row['album_title']
+      unless Album.find_by(name: album_title)
+        album = Album.new(name: album_title)
+        album.save
+      end
       # genre
       # Only first genre is saved Database design has to be different
       # Many to many relationship for each song and style and genre
@@ -68,8 +74,6 @@ class DataController < ApplicationController
       else
         publishing_year = Date.strptime(row['publishing_year'], '%Y')
       end
-
-
       # song
       # duration is missing
       unless Song.find_by(title: row['title'])
@@ -81,7 +85,8 @@ class DataController < ApplicationController
                         publishing_year: publishing_year,
                         score: row['score'],
                         audio_source: "http://www.youtube.com/embed/#{row['audio_source'].match(/[^=]*$/)}?autoplay=1",
-                        style_id: Style.find_by(name: style_name).id
+                        style_id: Style.find_by(name: style_name).id,
+                        album_id: Album.find_by(name: album_title).id
                         )
         song.save
       end
@@ -107,6 +112,7 @@ class DataController < ApplicationController
         'style_1',
         'style_2',
         'style_3',
+        'album_title',
         'title',
         'duration',
         'publishing_year',
@@ -142,12 +148,14 @@ class DataController < ApplicationController
     Capybara.javascript_driver = :headless_chrome
     Capybara.app_host = 'https://discogs.com'
 
-
-
-
-
     # Ghetto House
     visit('https://www.discogs.com/de/search/?sort=want%2Cdesc&style_exact=Ghetto+House&ev=gs_mc&type=release')
+    # 90ies Hip Hop G-funk
+    # visit('https://www.discogs.com/search/?sort=have%2Cdesc&type=all&genre_exact=Hip+Hop&decade=1990&style_exact=Gangsta&page=1')
+
+    # 90ies Hip Hop Hardcore
+    # visit('https://www.discogs.com/search/?sort=have%2Cdesc&type=all&genre_exact=Hip+Hop&decade=1990&page=4&style_exact=Hardcore+Hip-Hop')
+
     sleep(2)
     songs = []
     pages = 1
@@ -187,6 +195,7 @@ class DataController < ApplicationController
             song[:score] = find('#statistics > div > ul:nth-child(1) > li:nth-child(3) > span').text
             song[:quantity_score] = find('#statistics > div > ul:nth-child(1) > li:nth-child(4) > a > span').text
             song[:quantity_search] = find('#statistics > div.section_content.toggle_section_content > ul > li:nth-child(2) > a').text
+            song[:album_title] = find('#profile_title > span:nth-child(2)').text
           rescue Capybara::ElementNotFound
             next
           end
@@ -229,6 +238,7 @@ class DataController < ApplicationController
                       song[:publishing_year] = songs.last[:publishing_year]
                       song[:publishing_country] = songs.last[:publishing_country]
                       song[:score] = songs.last[:score]
+                      song[:album_title] = songs.last[:album_title]
                       break
                     end
                   end
@@ -251,6 +261,7 @@ class DataController < ApplicationController
             song['style_1'],
             song['style_2'],
             song['style_3'],
+            song[:album_title],
             song[:title],
             song[:duration],
             song[:publishing_year],

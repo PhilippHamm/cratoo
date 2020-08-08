@@ -10,10 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_05_22_084233) do
+ActiveRecord::Schema.define(version: 2020_05_31_104921) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "albums", force: :cascade do |t|
+    t.string "name"
+    t.bigint "song_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["song_id"], name: "index_albums_on_song_id"
+  end
 
   create_table "artists", force: :cascade do |t|
     t.string "name"
@@ -71,6 +79,8 @@ ActiveRecord::Schema.define(version: 2020_05_22_084233) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "style_id"
+    t.bigint "album_id"
+    t.index ["album_id"], name: "index_songs_on_album_id"
     t.index ["artist_id"], name: "index_songs_on_artist_id"
     t.index ["genre_id"], name: "index_songs_on_genre_id"
     t.index ["publishing_country_id"], name: "index_songs_on_publishing_country_id"
@@ -110,6 +120,7 @@ ActiveRecord::Schema.define(version: 2020_05_22_084233) do
   add_foreign_key "playlist_songs", "playlists"
   add_foreign_key "playlist_songs", "songs"
   add_foreign_key "playlists", "users"
+  add_foreign_key "songs", "albums"
   add_foreign_key "songs", "artists"
   add_foreign_key "songs", "genres"
   add_foreign_key "songs", "publishing_countries"
